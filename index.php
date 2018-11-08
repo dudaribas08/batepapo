@@ -1,18 +1,12 @@
 <?php
 	//phpinfo();
-require 'Mensagens.php';
 
-$dados = new Mensagens();
-$dados->conectar();
-
-$mensagens = $dados->getTodasMensagens();
-
-foreach ($mensagens as $msg) {
+/*foreach ($mensagens as $msg) {
     echo "<h3>" .$msg['remetente']. " escreveu (ID: " .$msg['id']. "):</h3>";
     echo "<p>";
     echo nl2br($msg['texto']);
     echo "</p>";
-}
+}*/
 
 ?>
 
@@ -26,6 +20,7 @@ foreach ($mensagens as $msg) {
 
 
 <script type="text/javascript">
+  var ultimoId = 0;
   var form = document.querySelector('form');
   var remetente = document.querySelector('#remetente');
   var texto = document.querySelector('#texto');
@@ -37,7 +32,8 @@ foreach ($mensagens as $msg) {
     
     var xhr = new XMLHttpRequest();
     xhr.onload = function() {
-      mostrarMensagem(xhr.responseText);
+      mostrarMensagem(remetente.value, texto.value, xhr.responseText);
+      ultimoId = xhr.responseText;
       limparForm();
     };
 
@@ -47,11 +43,11 @@ foreach ($mensagens as $msg) {
 
   form.onsubmit = enviarViaAJAX;
 
-  function mostrarMensagem(id) {
+  function mostrarMensagem(remetente, texto, id) {
     var h3 = document.createElement('h3');
-    h3.textContent = remetente.value + ' escreveu (ID: ' + id + '):';
+    h3.textContent = remetente + ' escreveu (ID: ' + id + '):';
     var p = document.createElement('p');
-    p.textContent = texto.value;
+    p.textContent = texto;
     form.parentNode.insertBefore(h3, form);
     form.parentNode.insertBefore(p, form);
   }
@@ -60,4 +56,19 @@ foreach ($mensagens as $msg) {
     remetente.value = '';
     texto.value = '';
   }
+
+  function buscarMensagens() {
+    var xhr = new XMLHttpRequest();
+
+    xhr.onload = function() {
+      var msgs = JSON.parse(xhr.responseText);
+      msgs.forEach(m => mostrarMensagem(m.remetente, m.texto, m.id));
+      ultimoId = msgs.length ? msgs.pop().id : ultimoId;
+      setTimeout(buscarMensagens, 1000);
+    }
+
+    xhr.open('GET', 'buscar.php?id=' + ultimoId);
+    xhr.send();
+  }
+  window.onload = buscarMensagens;
 </script>

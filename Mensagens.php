@@ -37,5 +37,20 @@ class Mensagens {
     public function __construct() {
         $this->conectar();
     }
+
+    public function getTodasMensagensAPartirDe($id){
+        $comando = $this->conexao->prepare(
+            "SELECT *
+            FROM mensagem
+            WHERE id > :id"
+        );
+
+        $comando->execute([
+            ':id' => $id
+        ]);
+
+        return $comando;        
+    }
+
 }
 ?>
